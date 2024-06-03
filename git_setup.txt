@@ -1,0 +1,29 @@
+
+git status
+
+git remote add HF_BC git@hf.co:spaces/nisargvp/llm-app-rev2.git
+git checkout --track -b HF_BCBranch HF_BC/main
+git remote -v
+
+cat ~/.ssh/id_rsa.pub *copy ssh secret to be updated on HF repo"
+ssh -T git@hf.co *check if HF repo is recognized"
+git remote set-url origin git@hf.co:spaces/nisargvp/llm-app-rev2.git
+
+git fetch --all
+git checkout main
+git merge HF_BCBranch --allow-unrelated-histories
+
+git add README.md
+git commit -m "Resolved merge conflict in README.md"
+git push
+
+git merge HF_BCBranch --allow-unrelated-histories
+git add .
+git commit -m "update with local changes"
+git push origin main
+
+
+# GITHUB PUSH
+git pull upstream main --allow-unrelated-histories
+git add .
+git push origin main
