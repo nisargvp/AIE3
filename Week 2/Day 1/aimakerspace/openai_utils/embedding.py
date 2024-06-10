@@ -7,7 +7,7 @@ import asyncio
 
 
 class EmbeddingModel:
-    def __init__(self, embeddings_model_name: str = "text-embedding-3-small"):
+    def __init__(self, embeddings_model_name: str = "text-embedding-3-small", embedding_dimensions=512):
         load_dotenv()
         self.openai_api_key = os.getenv("OPENAI_API_KEY")
         self.async_client = AsyncOpenAI()
@@ -19,31 +19,32 @@ class EmbeddingModel:
             )
         openai.api_key = self.openai_api_key
         self.embeddings_model_name = embeddings_model_name
+        self.embedding_dimensions = embedding_dimensions
 
     async def async_get_embeddings(self, list_of_text: List[str]) -> List[List[float]]:
         embedding_response = await self.async_client.embeddings.create(
-            input=list_of_text, model=self.embeddings_model_name
+            input=list_of_text, model=self.embeddings_model_name, dimensions=self.embedding_dimensions
         )
 
         return [embeddings.embedding for embeddings in embedding_response.data]
 
     async def async_get_embedding(self, text: str) -> List[float]:
         embedding = await self.async_client.embeddings.create(
-            input=text, model=self.embeddings_model_name
+            input=text, model=self.embeddings_model_name, dimensions=self.embedding_dimensions
         )
 
         return embedding.data[0].embedding
 
     def get_embeddings(self, list_of_text: List[str]) -> List[List[float]]:
         embedding_response = self.client.embeddings.create(
-            input=list_of_text, model=self.embeddings_model_name
+            input=list_of_text, model=self.embeddings_model_name, dimensions=self.embedding_dimensions
         )
 
         return [embeddings.embedding for embeddings in embedding_response.data]
 
     def get_embedding(self, text: str) -> List[float]:
         embedding = self.client.embeddings.create(
-            input=text, model=self.embeddings_model_name
+            input=text, model=self.embeddings_model_name, dimensions=self.embedding_dimensions
         )
 
         return embedding.data[0].embedding

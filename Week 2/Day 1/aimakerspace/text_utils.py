@@ -49,12 +49,14 @@ class CharacterTextSplitter:
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
 
+    # split text into a list of strings/ chunks
     def split(self, text: str) -> List[str]:
         chunks = []
         for i in range(0, len(text), self.chunk_size - self.chunk_overlap):
             chunks.append(text[i : i + self.chunk_size])
         return chunks
 
+    # split document(s) text into strings/ chunks and extend it into a combined list of text chunks
     def split_texts(self, texts: List[str]) -> List[str]:
         chunks = []
         for text in texts:
