@@ -16,10 +16,13 @@ def cosine_similarity(vector_a: np.array, vector_b: np.array) -> float:
 class VectorDatabase:
     def __init__(self, embedding_model: EmbeddingModel = None):
         self.vectors = defaultdict(np.array)
+        self.metadata = defaultdict(dict)
         self.embedding_model = embedding_model or EmbeddingModel()
 
-    def insert(self, key: str, vector: np.array) -> None:
+    def insert(self, key: str, vector: np.array, metadata: dict = None) -> None:
         self.vectors[key] = vector
+        if metadata:
+            self.metadata[key] = metadata
 
     def search(
         self,
@@ -31,6 +34,7 @@ class VectorDatabase:
             (key, distance_measure(query_vector, vector))
             for key, vector in self.vectors.items()
         ]
+        
         return sorted(scores, key=lambda x: x[1], reverse=True)[:k]
 
     def search_by_text(
@@ -47,10 +51,16 @@ class VectorDatabase:
     def retrieve_from_key(self, key: str) -> np.array:
         return self.vectors.get(key, None)
 
-    async def abuild_from_list(self, list_of_text: List[str]) -> "VectorDatabase":
+    def get_metadata(self, key: str) -> dict:
+        return self.metadata.get(key, None)
+
+    async def abuild_from_list(
+        self, list_of_text: List[str], list_of_metadata: List[dict] = None
+    ) -> "VectorDatabase":
         embeddings = await self.embedding_model.async_get_embeddings(list_of_text)
-        for text, embedding in zip(list_of_text, embeddings):
-            self.insert(text, np.array(embedding))
+        for i, (text, embedding) in enumerate(zip(list_of_text, embeddings)):
+            metadata = list_of_metadata[i] if list_of_metadata and i < len(list_of_metadata) else None
+            self.insert(text, np.array(embedding), metadata)
         return self
 
 
@@ -63,19 +73,33 @@ if __name__ == "__main__":
         "Look at this cute hamster munching on a piece of broccoli.",
     ]
 
+    metadata_list = [
+        {"category": "food", "sentiment": "positive"},
+        {"category": "food", "sentiment": "neutral"},
+        {"category": "animals", "sentiment": "positive"},
+        {"category": "animals", "sentiment": "neutral"},
+        {"category": "animals", "sentiment": "positive"},
+        {"category": "food", "sentiment": "negative"},
+    ]
+
     vector_db = VectorDatabase()
-    vector_db = asyncio.run(vector_db.abuild_from_list(list_of_text))
+    vector_db = asyncio.run(vector_db.abuild_from_list(list_of_text, metadata_list))
     k = 2
 
+    # Search with metadata filter
     searched_vector = vector_db.search_by_text("I think fruit is awesome!", k=k)
     print(f"Closest {k} vector(s):", searched_vector)
 
-    retrieved_vector = vector_db.retrieve_from_key(
-        "I like to eat broccoli and bananas."
-    )
-    print("Retrieved vector:", retrieved_vector)
+    # retrieved_vector = vector_db.retrieve_from_key(
+    #     "I like to eat broccoli and bananas."
+    # )
+    # print("Retrieved vector:", retrieved_vector)
 
     relevant_texts = vector_db.search_by_text(
         "I think fruit is awesome!", k=k, return_as_text=True
     )
     print(f"Closest {k} text(s):", relevant_texts)
+
+    # Retrieve metadata
+    for text in relevant_texts:
+        print(f"Metadata for '{text}':", vector_db.get_metadata(text))
