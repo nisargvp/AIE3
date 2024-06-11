@@ -27,3 +27,13 @@ git push origin main
 git pull upstream main --allow-unrelated-histories
 git add .
 git push origin main
+
+# GITHUB pull
+# to pull from remote repo
+git pull upstream main --allow-unrelated-histories 
+
+
+# This command does two things:
+##  Fetches: Retrieves the latest changes from the remote repository.
+##  Merges: Integrates those changes into your current local branch.
+git pull origin main
