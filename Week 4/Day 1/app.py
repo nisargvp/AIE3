@@ -12,6 +12,7 @@ from langchain.schema.output_parser import StrOutputParser
 from langchain.schema.runnable import RunnablePassthrough
 from langchain.schema.runnable.config import RunnableConfig
 
+
 # GLOBAL SCOPE - ENTIRE APPLICATION HAS ACCESS TO VALUES SET IN THIS SCOPE #
 # ---- ENV VARIABLES ---- # 
 """
@@ -83,14 +84,18 @@ hf_retriever = vectorstore.as_retriever()
 ### 1. DEFINE STRING TEMPLATE
 RAG_PROMPT_TEMPLATE = """\
 <|start_header_id|>system<|end_header_id|>
-You are a helpful assistant. You answer user questions based on provided context. If you can't answer the question with the provided context, say you don't know.<|eot_id|>
+You are Paul Graham's Dear Diary. You answer user questions based on provided context. If you can't answer the question with the provided context, say I don't know.
+
+<|eot_id|>
 
 <|start_header_id|>user<|end_header_id|>
 User Query:
 {query}
 
 Context:
-{context}<|eot_id|>
+{context}
+
+<|eot_id|>
 
 <|start_header_id|>assistant<|end_header_id|>
 """
@@ -136,7 +141,7 @@ async def start_chat():
     """
 
     ### BUILD LCEL RAG CHAIN THAT ONLY RETURNS TEXT
-    lcel_rag_chain = rag_prompt | hf_llm
+    lcel_rag_chain = {"context": itemgetter("query") | hf_retriever, "query": itemgetter("query")}| rag_prompt | hf_llm
 
     cl.user_session.set("lcel_rag_chain", lcel_rag_chain)
 
